@@ -20,6 +20,7 @@
 #include <utils/Errors.h>
 
 #include <string>
+#include <vector>
 
 namespace android {
 namespace vold {
@@ -31,7 +32,8 @@ status_t Check(const std::string& source, bool trusted);
 status_t Mount(const std::string& source, const std::string& target,
         const std::string& opts = "", bool trusted = false,
         bool portable = false);
-status_t Format(const std::string& source, const std::string& zoned_device = "");
+status_t Format(const std::string& source, const bool is_zoned,
+                const std::vector<std::string>& user_devices);
 
 }  // namespace f2fs
 }  // namespace vold

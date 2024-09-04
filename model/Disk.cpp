@@ -380,7 +380,6 @@ status_t Disk::readPartitions() {
                 continue;
             }
         } else if (*it == "PART") {
-            foundParts = true;
 
             if (++it == split.end()) continue;
             int i = 0;
@@ -406,6 +405,7 @@ status_t Disk::readPartitions() {
                     case 0x0e:  // W95 FAT16 (LBA)
                     case 0x83:  // Linux EXT4/F2FS/...
                         createPublicVolume(partDevice);
+                        foundParts = true;
                         break;
                 }
             } else if (table == Table::kGpt) {
@@ -417,8 +417,10 @@ status_t Disk::readPartitions() {
                 if (android::base::EqualsIgnoreCase(typeGuid, kGptBasicData)
                         || android::base::EqualsIgnoreCase(typeGuid, kGptLinuxFilesystem)) {
                     createPublicVolume(partDevice);
+                    foundParts = true;
                 } else if (android::base::EqualsIgnoreCase(typeGuid, kGptAndroidExpand)) {
                     createPrivateVolume(partDevice, partGuid);
+                    foundParts = true;
                 }
             }
         }
