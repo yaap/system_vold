@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef _PROCESS_H
-#define _PROCESS_H
+#ifndef ANDROID_VOLD_WRITE_BOOSTER_H
+#define ANDROID_VOLD_WRITE_BOOSTER_H
+
+#include <cstdint>
 
 namespace android {
 namespace vold {
 
-int KillProcessesWithOpenFiles(const std::vector<std::string>& paths, int signal,
-                               bool killFuseDaemon = true);
-int KillProcessesWithOpenFiles(const std::string& path, int signal, bool killFuseDaemon = true);
-int KillProcessesWithTmpfsMounts(const std::string& path, int signal);
+int32_t GetWriteBoosterBufferSize();
+int32_t GetWriteBoosterBufferAvailablePercent();
+bool SetWriteBoosterBufferFlush(bool enable);
+bool SetWriteBoosterBufferOn(bool enable);
+int32_t GetWriteBoosterLifeTimeEstimate();
 
 }  // namespace vold
 }  // namespace android
