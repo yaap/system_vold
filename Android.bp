@@ -36,12 +36,11 @@ cc_defaults {
         "libdm",
         "libext2_uuid",
         "libfec",
-        "libfec_rs",
         "libfs_avb",
         "libfs_mgr",
-        "libsquashfs_utils",
         "libvold_binder",
         "android.system.vold-V1-cpp",
+        "libcasefoldingremover",
     ],
     shared_libs: [
         "android.hardware.boot@1.0",
@@ -55,6 +54,7 @@ cc_defaults {
         "libcutils",
         "libext4_utils",
         "libf2fs_sparseblock",
+        "libfec_rs",
         "libgsi",
         "libhardware",
         "libhardware_legacy",
@@ -136,6 +136,7 @@ cc_library_static {
         "NetlinkManager.cpp",
         "NvmeDeviceUtils.cpp",
         "Process.cpp",
+        "RandUtils.cpp",
         "Utils.cpp",
         "VendorVoldNativeService.cpp",
         "VoldNativeService.cpp",
@@ -164,6 +165,7 @@ cc_library_static {
     static_libs: [
         "vold_flags_c_lib",
     ],
+    header_libs: ["libmeminfo_headers"],
     product_variables: {
         arc: {
             exclude_srcs: [

@@ -45,6 +45,7 @@
 #include <sys/statvfs.h>
 #include <sys/sysmacros.h>
 #include <sys/types.h>
+#include <sys/vfs.h>
 #include <sys/wait.h>
 #include <sys/xattr.h>
 #include <unistd.h>
@@ -227,6 +228,15 @@ int SetQuotaInherit(const std::string& path) {
     return 0;
 }
 
+bool IsLegacyUserdata(const std::string& path) {
+    struct statfs s;
+    if (statfs(path.c_str(), &s) != 0) {
+        PLOG(WARNING) << "statfs failed for " << path;
+        return false;
+    }
+    return (s.f_type == EXT4_SUPER_MAGIC);
+}
+
 int SetQuotaProjectId(const std::string& path, long projectId) {
     struct fsxattr fsx;
 
@@ -245,6 +255,12 @@ int SetQuotaProjectId(const std::string& path, long projectId) {
     fsx.fsx_projid = projectId;
     ret = ioctl(fd, FS_IOC_FSSETXATTR, &fsx);
     if (ret == -1) {
+        int err = errno;
+        if (IsLegacyUserdata(path) && (err == EINVAL || err == ENOTTY || err == EOPNOTSUPP)) {
+            LOG(WARNING) << "Project quota not supported on " << path
+                         << " (errno=" << err << "), skipping for legacy userdata";
+            return 0; // swallow
+        }
         PLOG(ERROR) << "Failed to set project id on " << path;
         return ret;
     }
@@ -275,20 +291,31 @@ static int FixupAppDir(const std::string& path, mode_t mode, uid_t uid, gid_t gi
         return ret;
     }
 
+    std::error_code ec;
     // Fixup all of its file entries
-    for (const auto& itEntry : fs::directory_iterator(path)) {
-        ret = lchown(itEntry.path().c_str(), uid, gid);
+    for (auto itEntry = fs::directory_iterator(path, ec); itEntry != fs::directory_iterator();
+         itEntry.increment(ec)) {
+        if (ec == std::errc::no_such_file_or_directory) {
+            LOG(WARNING) << "Skipping non-existent directory entry: " << itEntry->path();
+            ec.clear();
+            continue;
+        } else if (ec) {
+            LOG(ERROR) << "Failed to iterate dir: " << ec.message();
+            return -1;
+        }
+
+        ret = lchown(itEntry->path().c_str(), uid, gid);
         if (ret != 0) {
             return ret;
         }
 
-        ret = chmod(itEntry.path().c_str(), mode);
+        ret = chmod(itEntry->path().c_str(), mode);
         if (ret != 0) {
             return ret;
         }
 
         if (!IsSdcardfsUsed()) {
-            ret = SetQuotaProjectId(itEntry.path(), projectId);
+            ret = SetQuotaProjectId(itEntry->path(), projectId);
             if (ret != 0) {
                 return ret;
             }
@@ -875,42 +902,6 @@ pid_t ForkExecvpAsync(const std::vector<std::string>& args, char* context) {
         return -1;
     }
     return pid;
-}
-
-status_t ReadRandomBytes(size_t bytes, std::string& out) {
-    out.resize(bytes);
-    return ReadRandomBytes(bytes, &out[0]);
-}
-
-status_t ReadRandomBytes(size_t bytes, char* buf) {
-    int fd = TEMP_FAILURE_RETRY(open("/dev/urandom", O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
-    if (fd == -1) {
-        return -errno;
-    }
-
-    ssize_t n;
-    while ((n = TEMP_FAILURE_RETRY(read(fd, &buf[0], bytes))) > 0) {
-        bytes -= n;
-        buf += n;
-    }
-    close(fd);
-
-    if (bytes == 0) {
-        return OK;
-    } else {
-        return -EIO;
-    }
-}
-
-status_t GenerateRandomUuid(std::string& out) {
-    status_t res = ReadRandomBytes(16, out);
-    if (res == OK) {
-        out[6] &= 0x0f; /* clear version        */
-        out[6] |= 0x40; /* set to version 4     */
-        out[8] &= 0x3f; /* clear variant        */
-        out[8] |= 0x80; /* set to IETF variant  */
-    }
-    return res;
 }
 
 status_t HexToStr(const std::string& hex, std::string& str) {

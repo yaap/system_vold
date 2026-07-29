@@ -20,8 +20,9 @@
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
-#include <logwrap/logwrap.h>
 #include <fscrypt/fscrypt.h>
+#include <logwrap/logwrap.h>
+#include <meminfo/kernel_page_size.h>
 #include <private/android_filesystem_config.h>
 
 #include <string>
@@ -116,6 +117,11 @@ status_t Format(const std::string& source, bool is_zoned,
         cmd.emplace_back("extra_attr");
     }
 
+    if (android::base::GetBoolProperty("external_storage.packedssa.enabled", false)) {
+        cmd.emplace_back("-O");
+        cmd.emplace_back("packed_ssa");
+    }
+
     const bool needs_casefold =
             android::base::GetBoolProperty("external_storage.casefold.enabled", false);
     if (needs_casefold) {
@@ -137,8 +143,15 @@ status_t Format(const std::string& source, bool is_zoned,
         }
         cmd.emplace_back(device_name);
     }
+
+    // Set block size to kernel_page_size() instead of getpagesize()
+    //
+    // On x86_64 based 16kb page size targets, the page size in userspace is simulated
+    // to 16kb but the underlying filesystem block size would remain the same as the
+    // underlying kernel page size. On all other targets the kernel page size is the
+    // same as the userspace page size.
     cmd.emplace_back("-b");
-    cmd.emplace_back(std::to_string(getpagesize()));
+    cmd.emplace_back(std::to_string(::android::meminfo::kernel_page_size()));
 
     cmd.emplace_back(source.c_str());
 

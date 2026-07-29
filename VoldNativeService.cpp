@@ -565,6 +565,14 @@ binder::Status VoldNativeService::setGCUrgentPace(int32_t neededSegments,
     return Ok();
 }
 
+binder::Status VoldNativeService::setMaxLockElapsedTime(int32_t maxTime) {
+    ENFORCE_SYSTEM_OR_ROOT;
+    ACQUIRE_LOCK;
+
+    SetMaxLockElapsedTime(maxTime);
+    return Ok();
+}
+
 binder::Status VoldNativeService::refreshLatestWrite() {
     ENFORCE_SYSTEM_OR_ROOT;
     ACQUIRE_LOCK;
@@ -764,8 +772,7 @@ binder::Status VoldNativeService::isCheckpointing(bool* _aidl_return) {
     ENFORCE_SYSTEM_OR_ROOT;
     ACQUIRE_LOCK;
 
-    *_aidl_return = cp_isCheckpointing();
-    return Ok();
+    return cp_isCheckpointing(*_aidl_return);
 }
 
 binder::Status VoldNativeService::commitChanges() {
@@ -773,6 +780,13 @@ binder::Status VoldNativeService::commitChanges() {
     ACQUIRE_LOCK;
 
     return cp_commitChanges();
+}
+
+binder::Status VoldNativeService::syncStorage() {
+    ENFORCE_SYSTEM_OR_ROOT;
+    // No lock needed for global sync()
+    sync();
+    return binder::Status::ok();
 }
 
 binder::Status VoldNativeService::prepareCheckpoint() {
@@ -838,8 +852,7 @@ binder::Status VoldNativeService::resetCheckpoint() {
     ENFORCE_SYSTEM_OR_ROOT;
     ACQUIRE_LOCK;
 
-    cp_resetCheckpoint();
-    return Ok();
+    return cp_resetCheckpoint();
 }
 
 static void initializeIncFs() {

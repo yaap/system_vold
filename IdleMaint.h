@@ -30,6 +30,7 @@ int32_t GetStorageRemainingLifetime();
 void SetGCUrgentPace(int32_t neededSegments, int32_t minSegmentThreshold, float dirtyReclaimRate,
                      float reclaimWeight, int32_t gcPeriod, int32_t minGCSleepTime,
                      int32_t targetDirtyRatio);
+void SetMaxLockElapsedTime(int maxTime);
 void RefreshLatestWrite();
 int32_t GetWriteAmount();
 

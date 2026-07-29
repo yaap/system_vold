@@ -595,6 +595,41 @@ void SetGCUrgentPace(int32_t neededSegments, int32_t minSegmentThreshold, float 
               << ", sleep time: " << sleepTime;
 }
 
+void SetMaxLockElapsedTime(int maxTime) {
+    std::list<std::string> paths;
+
+    addFromFstab(&paths, PathTypes::kBlkDevice, true);
+    if (paths.empty()) {
+        LOG(WARNING) << "There is no valid blk device path for data partition";
+        return;
+    }
+
+    std::string maxLockElapsedTimePath = paths.front() + "/max_lock_elapsed_time";
+
+    std::string originalTimeStr;
+    if (!ReadFileToString(maxLockElapsedTimePath, &originalTimeStr)) {
+        PLOG(WARNING) << "Reading failed in " << maxLockElapsedTimePath;
+        return;
+    }
+
+    originalTimeStr = android::base::Trim(originalTimeStr);
+
+    std::string targetTimeStr = std::to_string(maxTime);
+
+    if (originalTimeStr == targetTimeStr) {
+        LOG(INFO) << "max_lock_elapsed_time is already set to " << targetTimeStr;
+        return;
+    }
+
+    if (!WriteStringToFile(targetTimeStr, maxLockElapsedTimePath)) {
+        PLOG(WARNING) << "Writing failed in " << maxLockElapsedTimePath;
+        return;
+    }
+
+    LOG(INFO) << "Successfully set max lock elapsed time from  " << originalTimeStr << " to "
+              << targetTimeStr;
+}
+
 static int32_t getLifeTimeWrite() {
     std::list<std::string> paths;
     addFromFstab(&paths, PathTypes::kBlkDevice, true);

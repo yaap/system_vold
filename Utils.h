@@ -122,10 +122,6 @@ status_t GetBlockDevSize(const std::string& path, uint64_t* size);
 /* Gets block device size in 512 byte sectors */
 status_t GetBlockDev512Sectors(const std::string& path, uint64_t* nr_sec);
 
-status_t ReadRandomBytes(size_t bytes, std::string& out);
-status_t ReadRandomBytes(size_t bytes, char* buffer);
-status_t GenerateRandomUuid(std::string& out);
-
 /* Converts hex string to raw bytes, ignoring [ :-] */
 status_t HexToStr(const std::string& hex, std::string& str);
 /* Converts raw bytes to hex string */

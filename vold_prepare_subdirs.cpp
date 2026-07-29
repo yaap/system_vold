@@ -162,8 +162,19 @@ static bool prepare_apex_subdirs(struct selabel_handle* sehandle, const std::str
         // skip any starting with "."
         if (name[0] == '.') continue;
 
-        if (!prepare_dir(sehandle, 0771, AID_ROOT, AID_SYSTEM, path + "/apexdata/" + name)) {
+        auto apexdata_path = path + "/apexdata/" + name;
+        if (!prepare_dir(sehandle, 0771, AID_ROOT, AID_SYSTEM, apexdata_path)) {
             return false;
+        }
+        if (strcmp(name, "com.android.wifi") == 0) {
+            auto wifi_apex_supplicant_path = apexdata_path + "/mainline_supplicant";
+            auto wifi_apex_supplicant_wpa_path = wifi_apex_supplicant_path + "/wpa";
+            if (!prepare_dir(sehandle, 0700, AID_WIFI, AID_WIFI, wifi_apex_supplicant_path)) {
+                return false;
+            }
+            if (!prepare_dir(sehandle, 0700, AID_WIFI, AID_WIFI, wifi_apex_supplicant_wpa_path)) {
+                return false;
+            }
         }
     }
     return true;
@@ -235,7 +246,15 @@ static bool prepare_subdirs(const std::string& volume_uuid, int user_id, int fla
             // the user id to set the correct selinux mls_level.
             if (!prepare_dir_for_user(sehandle, 0770, AID_SYSTEM, AID_CACHE,
                                       misc_ce_path + "/checkin", user_id)) {
-                return false;
+                // TODO(b/203742483) the checkin directory was created with the wrong permission &
+                // context. Delete the directory to get these devices out of the bad state. Revert
+                // the change once the droidfood population is on newer build.
+                LOG(INFO) << "Failed to prepare the checkin directory, deleting for recreation";
+                android::vold::DeleteDirContentsAndDir(misc_ce_path + "/checkin");
+                if (!prepare_dir_for_user(sehandle, 0770, AID_SYSTEM, AID_CACHE,
+                                          misc_ce_path + "/checkin", user_id)) {
+                    return false;
+                }
             }
 
             auto system_ce_path = android::vold::BuildDataSystemCePath(user_id);
@@ -253,6 +272,15 @@ static bool prepare_subdirs(const std::string& volume_uuid, int user_id, int fla
             auto vendor_ce_path = android::vold::BuildDataVendorCePath(user_id);
             auto facedata_path = vendor_ce_path + "/facedata";
             if (!prepare_dir(sehandle, 0700, AID_SYSTEM, AID_SYSTEM, facedata_path)) {
+                return false;
+            }
+            auto wifidata_path = vendor_ce_path + "/wifi";
+            if (!prepare_dir(sehandle, 0700, AID_WIFI, AID_WIFI, wifidata_path)) {
+                return false;
+            }
+
+            auto wpa_path = vendor_ce_path + "/wifi/wpa";
+            if (!prepare_dir(sehandle, 0700, AID_WIFI, AID_WIFI, wpa_path)) {
                 return false;
             }
         }

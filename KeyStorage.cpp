@@ -18,6 +18,7 @@
 
 #include "Checkpoint.h"
 #include "Keystore.h"
+#include "RandUtils.h"
 #include "Utils.h"
 
 #include <algorithm>
@@ -48,7 +49,6 @@ namespace vold {
 
 const KeyAuthentication kEmptyAuthentication{""};
 
-static constexpr size_t AES_KEY_BYTES = 32;
 static constexpr size_t GCM_NONCE_BYTES = 12;
 static constexpr size_t GCM_MAC_BYTES = 16;
 static constexpr size_t SECDISCARDABLE_BYTES = 1 << 14;
@@ -130,29 +130,6 @@ static bool generateKeyStorageKey(Keystore& keystore, const std::string& appId, 
                         "non-rollback-resistant key.";
         if (!keystore.generateKey(paramBuilder, key)) return false;
     }
-    return true;
-}
-
-bool generateWrappedStorageKey(KeyBuffer* key) {
-    Keystore keystore;
-    if (!keystore) return false;
-    std::string key_temp;
-    auto paramBuilder = km::AuthorizationSetBuilder().AesEncryptionKey(AES_KEY_BYTES * 8);
-    paramBuilder.Authorization(km::TAG_STORAGE_KEY);
-    if (!keystore.generateKey(paramBuilder, &key_temp)) return false;
-    *key = KeyBuffer(key_temp.size());
-    memcpy(reinterpret_cast<void*>(key->data()), key_temp.c_str(), key->size());
-    return true;
-}
-
-bool exportWrappedStorageKey(const KeyBuffer& ksKey, KeyBuffer* key) {
-    Keystore keystore;
-    if (!keystore) return false;
-    std::string key_temp;
-
-    if (!keystore.exportKey(ksKey, &key_temp)) return false;
-    *key = KeyBuffer(key_temp.size());
-    memcpy(reinterpret_cast<void*>(key->data()), key_temp.c_str(), key->size());
     return true;
 }
 

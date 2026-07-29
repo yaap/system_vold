@@ -18,6 +18,7 @@
 #include "FsCrypt.h"
 #include "PrivateVolume.h"
 #include "PublicVolume.h"
+#include "RandUtils.h"
 #include "Utils.h"
 #include "VolumeBase.h"
 #include "VolumeEncryption.h"

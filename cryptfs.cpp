@@ -71,7 +71,7 @@ static const CryptoType& get_crypto_type() {
 }
 
 const KeyGeneration cryptfs_get_keygen() {
-    return KeyGeneration{get_crypto_type().get_keysize(), true, false};
+    return KeyGeneration{get_crypto_type().get_keysize(), true, android::fscrypt::KeyType::kRaw};
 }
 
 /* Convert a binary key of specified length into an ascii hex string equivalent,

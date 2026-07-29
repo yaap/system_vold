@@ -16,7 +16,7 @@
 
 package android.os;
 
-/** {@hide} */
+/** @hide */
 oneway interface IVoldListener {
     void onDiskCreated(@utf8InCpp String diskId, int flags);
     void onDiskScanned(@utf8InCpp String diskId);

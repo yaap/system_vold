@@ -160,6 +160,7 @@ with open("BenchmarkGen.h", 'w') as bench:
 #include <functional>
 #include <string>
 
+#include <RandUtils.h>
 #include <Utils.h>
 
 namespace android {

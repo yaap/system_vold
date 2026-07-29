@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package android.os;
+#ifndef ANDROID_VOLD_RANDUTILS_H
+#define ANDROID_VOLD_RANDUTILS_H
 
-/** @hide */
-interface IVoldMountCallback {
-    boolean onVolumeChecking(FileDescriptor fuseFd, @utf8InCpp String path,
-        @utf8InCpp String internalPath);
-}
+#include <utils/Errors.h>
+#include <string>
+
+namespace android {
+namespace vold {
+
+status_t ReadRandomBytes(size_t bytes, std::string& out);
+status_t ReadRandomBytes(size_t bytes, char* buffer);
+status_t GenerateRandomUuid(std::string& out);
+
+}  // namespace vold
+}  // namespace android
+
+#endif

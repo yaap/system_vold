@@ -18,7 +18,7 @@ package android.os;
 
 import android.os.PersistableBundle;
 
-/** {@hide} */
+/** @hide */
 oneway interface IVoldTaskListener {
     void onStatus(int status, in PersistableBundle extras);
     void onFinished(int status, in PersistableBundle extras);

@@ -40,7 +40,7 @@ bool cp_needsRollback();
 
 bool cp_needsCheckpoint();
 
-bool cp_isCheckpointing();
+android::binder::Status cp_isCheckpointing(bool& result);
 
 android::binder::Status cp_prepareCheckpoint();
 
@@ -48,7 +48,7 @@ android::binder::Status cp_restoreCheckpoint(const std::string& mountPoint, int 
 
 android::binder::Status cp_markBootAttempt();
 
-void cp_resetCheckpoint();
+android::binder::Status cp_resetCheckpoint();
 
 bool cp_registerCheckpointListener(
         android::sp<android::system::vold::IVoldCheckpointListener> listener);

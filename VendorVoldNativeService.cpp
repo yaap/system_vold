@@ -16,16 +16,12 @@
 
 #include "VendorVoldNativeService.h"
 
-#include <mutex>
-
 #include <android-base/logging.h>
 #include <binder/IServiceManager.h>
 #include <private/android_filesystem_config.h>
-#include <utils/Trace.h>
 
 #include "Checkpoint.h"
 #include "VoldNativeServiceValidation.h"
-#include "VolumeManager.h"
 
 #define ENFORCE_SYSTEM_OR_ROOT                              \
     {                                                       \
@@ -34,10 +30,6 @@
             return status;                                  \
         }                                                   \
     }
-
-#define ACQUIRE_LOCK                                                        \
-    std::lock_guard<std::mutex> lock(VolumeManager::Instance()->getLock()); \
-    ATRACE_CALL();
 
 namespace android::vold {
 
@@ -55,7 +47,6 @@ binder::Status VendorVoldNativeService::registerCheckpointListener(
         const sp<android::system::vold::IVoldCheckpointListener>& listener,
         android::system::vold::CheckpointingState* _aidl_return) {
     ENFORCE_SYSTEM_OR_ROOT;
-    ACQUIRE_LOCK;
 
     bool possible_checkpointing = cp_registerCheckpointListener(listener);
     *_aidl_return = possible_checkpointing

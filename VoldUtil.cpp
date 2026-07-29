@@ -30,6 +30,16 @@ using namespace android::dm;
 
 android::fs_mgr::Fstab fstab_default;
 
+static std::string GetUserDataBlockDevicePathOnce() {
+    android::fs_mgr::FstabEntry* entry =
+            android::fs_mgr::GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
+    if (entry == nullptr) {
+        LOG(ERROR) << "No mount point entry for " << DATA_MNT_POINT;
+        return "";
+    }
+    return entry->blk_device;
+}
+
 static std::string GetUfsHostControllerSysfsPathOnce() {
     android::fs_mgr::FstabEntry* entry =
             android::fs_mgr::GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
@@ -77,6 +87,13 @@ static std::string GetUfsHostControllerSysfsPathOnce() {
 
     LOG(DEBUG) << "The sysfs directory for the ufs host controller is found at " << path;
     return path;
+}
+
+// Gets the path to the main block device for the userdata filesystem.
+// Returns an empty string on failure.
+std::string GetUserDataBlockDevicePath() {
+    static std::string userdata_dev_path = GetUserDataBlockDevicePathOnce();
+    return userdata_dev_path;
 }
 
 // get sysfs directory for the ufs host controller containing userdata

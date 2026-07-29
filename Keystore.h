@@ -36,6 +36,8 @@ namespace vold {
 namespace ks2 = ::aidl::android::system::keystore2;
 namespace km = ::aidl::android::hardware::security::keymint;
 
+constexpr size_t AES_KEY_BYTES = 32;
+
 // C++ wrappers to the Keystore2 AIDL interface.
 // This is tailored to the needs of KeyStorage, but could be extended to be
 // a more general interface.
